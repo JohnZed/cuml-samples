@@ -69,8 +69,9 @@ def run_xgboost(X, y):
     t1 = time.time()
     return t1 - t0
 
-def run_benchmark(algo_name, nrows=1000, ncols=101):
-    X, y = load_data_mortgage_Xy(nrows, ncols)
+def run_benchmark(algo_name, nrows=1000, ncols=101, dtype=np.float32,
+                  cached='data/mortgage.npy.gz'):
+    X, y = load_data_mortgage_Xy(nrows, ncols, dtype, cached)
 
     print("Running: ", algo_name)
     if algo_name.lower() == 'xgboost':
@@ -94,8 +95,15 @@ if __name__ == '__main__':
     parser.add_argument('algorithms', nargs='*',
                         help='Algorithms to run or omit to run all, options: %s' % (
                             "\n  ".join(ALL_ALGO_NAMES)))
-    parser.add_argument('--size', default='small')
+    parser.add_argument('--size', default='small', choices=['small', 'large'],
+                        help='Dataset sizes to be benchmarked')
+    parser.add_argument('--dtype', default='float32',
+                        choices=['float32', 'float64'],
+                        help='Computation data type')
+    parser.add_argument('--dataset', default='data/mortgage.npy.gz',
+                        help='Path to the dataset used for benchmarking')
     args = parser.parse_args()
+    args.dtype = np.float32 if args.dtype == 'float32' else np.float64
 
     print("CuML: %s, CuDF: %s, XGboost: %s" %
           (cuml.__version__, cudf.__version__, xgboost.__version__))
@@ -114,5 +122,5 @@ if __name__ == '__main__':
         ncols = 401     # about 4.8gb of raw data, large but fits on GPU
 
     for a in algo_names:
-        run_benchmark(a, nrows=nrows, ncols=ncols)
-
+        run_benchmark(a, nrows=nrows, ncols=ncols, dtype=args.dtype,
+                      cached=args.dataset)
