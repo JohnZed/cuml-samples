@@ -95,8 +95,8 @@ if __name__ == '__main__':
     parser.add_argument('algorithms', nargs='*',
                         help='Algorithms to run or omit to run all, options: %s' % (
                             "\n  ".join(ALL_ALGO_NAMES)))
-    parser.add_argument('--size', default='small', choices=['small', 'large'],
-                        help='Dataset sizes to be benchmarked')
+    parser.add_argument('--size', default='small', type=str,
+                        help='Dataset size [small,large,<nrows>x<ncols>]')
     parser.add_argument('--dtype', default='float32',
                         choices=['float32', 'float64'],
                         help='Computation data type')
@@ -117,9 +117,13 @@ if __name__ == '__main__':
     if args.size == 'small':
         nrows = 10000
         ncols = 81
-    else:
+    elif args.size == 'large':
         nrows = 3000183 # datasets have arbitrary, not powers-of-2 sizes often
         ncols = 401     # about 4.8gb of raw data, large but fits on GPU
+    else: # assumed to be dataset dimension specified in the form of <nrows>x<ncols>
+        dims = args.size.split('x')
+        nrows = int(dims[0])
+        ncols = int(dims[1])
 
     for a in algo_names:
         run_benchmark(a, nrows=nrows, ncols=ncols, dtype=args.dtype,
